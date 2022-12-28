@@ -1,0 +1,22 @@
+# Q1
+import pandas as pd
+import numpy as np0
+
+with open('input.txt') as f:
+    lines = f.read()
+
+lines = lines.strip()
+elves = lines.split("\n\n")
+
+elfcalorylists = [elflist.split('\n') for elflist in elves]
+intelfcalorylists = [[int(x) for x in elist] for elist in elfcalorylists]
+elfcalories = [np.sum(elflist) for elflist in intelfcalorylists]
+
+np.max(elfcalories)
+
+sortedlist = elfcalories
+
+sortedlist.sort(reverse=True)
+
+np.sum(sortedlist[0:3])
+sortedlist[0]+sortedlist[1]+sortedlist[2]
