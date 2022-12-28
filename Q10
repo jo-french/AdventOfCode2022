@@ -1,0 +1,52 @@
+# Q10
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+lines = lines.strip()
+lines = lines.split('\n')
+
+def processline(mincycles, Xs, currentcycle, currentX, i):
+    if lines[i] == 'noop':
+        mincycles.append(currentcycle+1)
+        Xs.append(currentX)
+    elif lines[i].startswith('addx'):
+        numtoadd = int(lines[i].split('addx ')[1])
+        mincycles.append(currentcycle+2)
+        Xs.append(currentX + numtoadd)
+        
+mincycles = []
+Xs = []
+currentcycle = 0
+currentX = 1
+for i in range(len(lines)):
+    processline(mincycles, Xs, currentcycle, currentX, i)
+    currentcycle = mincycles[len(mincycles)-1]
+    currentX = Xs[len(Xs)-1]
+    
+cyclesofinterest = [20, 60, 100, 140, 180, 220]
+indicestouse = [max(i for i in range(len(Xs)) if mincycles[i] < j) for j in cyclesofinterest]
+
+signalstrengths = [cyclesofinterest[i]*Xs[indicestouse[i]] for i in range(len(cyclesofinterest))]
+
+sum(signalstrengths)
+
+# Part 2
+
+crt = np.zeros((6, 40))
+
+cyclenum = 1
+spritemid = 1
+for j in range(6):
+    for i in range(40):
+        if cyclenum == 1:
+            spritemid = 1
+        else:
+            maxindex = max(idx for idx in range(len(Xs)) if mincycles[idx] < cyclenum)
+            spritemid = Xs[maxindex]
+        if i in [spritemid - 1, spritemid, spritemid + 1]:
+            crt[j, i] = 1
+        cyclenum = cyclenum + 1
