@@ -1,0 +1,147 @@
+# Q9
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+lines = lines.strip()
+lines = lines.split('\n')
+
+directions = [l.split(' ')[0] for l in lines]
+vals = [int(l.split(' ')[1]) for l in lines]
+
+start = [0, 0]
+headpos = start
+tailpos = start
+
+headpositions = []
+tailpositions = []
+headpositions.append(headpos)
+tailpositions.append(tailpos)
+
+def updateposone(i, j, d):
+    if d == 'U':
+        i = i+1
+    elif d == 'D':
+        i = i-1
+    elif d == 'R':
+        j = j+1
+    elif d == 'L':
+        j = j-1
+    return [i, j]
+
+def moveH(headpos, tailpos, i, headpositions, tailpositions):
+    dist = vals[i]
+    direction = directions[i]
+    for k in range(dist):
+        headpos = updateposone(headpos[0], headpos[1], direction)
+        headpositions.append(headpos)
+        tailpos = updatetailposone(headpos, tailpos)
+        tailpositions.append(tailpos)
+    return headpos, tailpos
+        
+def updatetailposone(headpos, tailpos):
+    h1 = headpos[0]
+    h2 = headpos[1]
+    t1 = tailpos[0]
+    t2 = tailpos[1]
+    if h1 == t1 and h2 == t2 + 2:
+        return [t1, t2+1]
+    elif h1 == t1 and h2 == t2-2:
+        return [t1, t2-1]
+    elif h2 == t2 and h1 == t1 + 2:
+        return [t1+1, t2]
+    elif h2 == t2 and h1 == t1 - 2:
+        return [t1-1, t2]
+    elif (h1 == t1 + 2 and h2 == t2 + 1) or (h1 == t1 + 1 and h2 == t2 + 2):
+        return [t1 + 1, t2 + 1]
+    elif (h1 == t1-2 and h2 == t2+1) or (h1 == t1-1 and h2==t2+2):
+        return [t1-1, t2+1]
+    elif (h1 == t1-2 and h2 == t2-1) or (h1 == t1-1 and h2 == t2-2):
+        return [t1-1, t2-1]
+    elif (h1 == t1 + 2 and h2 == t2-1) or (h1 == t1+1 and h2 == t2-2):
+        return [t1+1, t2-1]
+    else:
+        return [t1, t2]
+        
+        
+for i in range(len(directions)):
+    headpos, tailpos = moveH(headpos, tailpos, i, headpositions, tailpositions)
+    
+setoftailpositions = set(tuple(x) for x in tailpositions)
+
+len(setoftailpositions)
+
+
+# Part 2
+
+def updatetailposonenew(headpos, tailpos):
+    h1 = headpos[0]
+    h2 = headpos[1]
+    t1 = tailpos[0]
+    t2 = tailpos[1]
+    if h1 == t1 and h2 == t2 + 2:
+        return [t1, t2+1]
+    elif h1 == t1 and h2 == t2-2:
+        return [t1, t2-1]
+    elif h2 == t2 and h1 == t1 + 2:
+        return [t1+1, t2]
+    elif h2 == t2 and h1 == t1 - 2:
+        return [t1-1, t2]
+    elif (h1 == t1 + 2 and h2 == t2 + 1) or (h1 == t1 + 1 and h2 == t2 + 2):
+        return [t1 + 1, t2 + 1]
+    elif (h1 == t1-2 and h2 == t2+1) or (h1 == t1-1 and h2==t2+2):
+        return [t1-1, t2+1]
+    elif (h1 == t1-2 and h2 == t2-1) or (h1 == t1-1 and h2 == t2-2):
+        return [t1-1, t2-1]
+    elif (h1 == t1 + 2 and h2 == t2-1) or (h1 == t1+1 and h2 == t2-2):
+        return [t1+1, t2-1]
+    elif (h1 == t1+2 and h2 == t2+2):
+        return [t1+1, t2+1]
+    elif (h1 == t1-2 and h2 == t2-2):
+        return [t1-1, t2-1]
+    elif (h1 == t1+2 and h2 == t2-2):
+        return [t1+1, t2-1]
+    elif (h1 == t1-2 and h2 == t2+2):
+        return [t1-1, t2+1]
+    else:
+        return [t1, t2]
+    
+    
+def moveHandTails(headpos, tailpositionlist, i, headpositions, tailpositions):
+    dist = vals[i]
+    direction = directions[i]
+    for k in range(dist):
+        headpos = updateposone(headpos[0], headpos[1], direction)
+        headpositions.append(headpos)
+        newtailpositionlist = []
+        newtp = [0, 0]
+        for i in range(len(tailpositionlist)):
+            if i == 0:
+                newtp = updatetailposonenew(headpos, tailpositionlist[0])
+            else:
+                print(newtailpositionlist[i-1], tailpositionlist[i])
+                newtp = updatetailposonenew(newtailpositionlist[i-1], tailpositionlist[i])
+            newtailpositionlist.append(newtp)
+            print(newtailpositionlist)
+        tailpositionlist = newtailpositionlist
+        tailpositions.append(newtailpositionlist)
+    return headpos, tailpositionlist
+
+
+
+headpos = [0,0]
+headpositions = []
+tailpositions = []
+tailpositionlist = []
+for i in range(9):
+    tailpositionlist.append([0,0])
+    
+for i in range(len(directions)):
+    headpos, tailpositionlist = moveHandTails(headpos, tailpositionlist, i, headpositions, tailpositions)
+    
+setoftailpositions = set([tuple(x[8]) for x in tailpositions])
+
+len(setoftailpositions)
