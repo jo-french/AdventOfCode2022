@@ -1,0 +1,44 @@
+Q4
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+
+lines = lines.strip()
+
+elves = lines.split('\n')
+elves1 = [e.split(',')[0] for e in elves]
+elves2 = [e.split(',')[1] for e in elves]
+
+e11 = [int(e.split('-')[0]) for e in elves1]
+e12 = [int(e.split('-')[1]) for e in elves1]
+
+e21 = [int(e.split('-')[0]) for e in elves2]
+e22 = [int(e.split('-')[1]) for e in elves2]
+
+combined = list(zip(e11, e12, e21, e22))
+
+def elfrcontainselfr(r):
+    if (r[0] <= r[2] and r[3] <= r[1]):
+        return 1
+    elif (r[2] <= r[0] and r[1] <= r[3]):
+        return 1
+    else:
+        return 0
+    
+containments = [elfrcontainselfr(r) for r in combined]
+sum(containments)
+
+def overlap(r):
+    if (r[0] >= r[2] and r[0] <= r[3]):
+        return 1
+    elif (r[2] >= r[0] and r[2] <= r[1]):
+        return 1
+    else:
+        return 0
+
+overlapping = [overlap(r) for r in combined]
+
+sum(overlapping)
