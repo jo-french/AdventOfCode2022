@@ -1,0 +1,144 @@
+# Q7
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+lines = lines.strip()
+    
+class directory:
+    def __init__(self, name, previousdir):
+        self.name = name
+        self.subdirectories = set()
+        self.files = set()
+        self.prevdir = previousdir
+    def add_file(self, file):
+        self.files.add(file)
+    def add_subdirectory(self, subdirectory):
+        self.subdirectories.add(subdirectory)
+        
+class file:
+    def __init__(self, filename, size, currentdir):
+        self.filename = filename
+        self.size = size
+        self.currentdir = currentdir
+        
+        
+home = directory("/", None)
+
+commands = lines.split('\n')
+
+alldirs = set()
+alldirs.add('/')
+dirdict = {}
+filedict = {}
+
+codeset = set()
+
+thisdir = home
+
+def process_file(currentdir, line):
+    if len(line.split('dir')) > 1:
+        subdirname = line.split('dir')[1].strip()
+        if not subdirname + '-sub-' + currentdir.name in alldirs:
+            subdir = directory(subdirname + '-sub-' + currentdir.name, currentdir)
+            alldirs.add(subdirname + '-sub-' + currentdir.name)
+            dirdict[subdirname + '-sub-' + currentdir.name] = subdir
+        else:
+            subdir = dirdict[subdirname + '-sub-' + currentdir.name]
+        currentdir.add_subdirectory(subdir)          
+    elif line[0].isdigit():
+        newfilename = line.split(' ')[1]
+        newfilesize = int(line.split(' ')[0])
+        if not newfilename + '-in-' + currentdir.name in filedict:
+            newfile = file(newfilename+ '-in-' + currentdir.name, newfilesize, currentdir)
+            currentdir.add_file(newfile)
+            filedict[newfilename+ '-in-' + currentdir.name] = newfile
+        else:
+            currentdir.add_file(filedict[newfilename+ '-in-' + currentdir.name])
+        
+def read_line(thisdir, lines, i):
+    try:
+        if i >= len(commands):
+            return
+        if lines[i].startswith('$ cd'):
+            if lines[i].split('$ cd ')[1] == '..':
+                if not thisdir.name == '/':
+                    thisdir = thisdir.prevdir
+            else:
+                newdirname = lines[i].split('$ cd ')[1]
+                if not newdirname + '-sub-' + thisdir.name in dirdict:
+                    newdir = directory(newdirname + '-sub-' + thisdir.name, thisdir)
+                    # Do we need to add newdir to currentdir?
+                    alldirs.add(newdirname + '-sub-' + thisdir.name)
+                    dirdict[newdirname + '-sub-' + thisdir.name] = newdir
+                thisdir = dirdict[newdirname + '-sub-' + thisdir.name]
+            i = i+1
+        elif lines[i].startswith('$ ls'):
+            if thisdir.name == 'bdnc':
+                print(i)
+                print(lines[i])
+            i = i+1
+            if i == len(commands):
+                return
+            while not lines[i].startswith('$') and i < len(commands):
+                if thisdir.name == 'bdnc':
+                    print(lines[i])
+                    print('Here')
+                process_file(thisdir, lines[i])
+                i = i+1
+        read_line(thisdir, commands, i)
+    except:
+        print(i)
+        print(thisdir.name)
+i = 0
+read_line(thisdir, commands, i)
+
+def calculatedirsize(mydir):
+    size = 0
+    for file in mydir.files:
+        size = size + file.size
+    for subdir in mydir.subdirectories:
+        print(subdir.name)
+        runonnames.append(subdir.name)
+        size = size + calculatedirsize(subdir)
+    return size
+    
+dirsizedict = {}
+runon = []
+runonnames = []
+for dirname in dirdict:
+    runon.append(dirname)
+    dirsizedict[dirname] = calculatedirsize(dirdict[dirname])
+    
+sizemax = 100000
+
+smalldirs = [d for d in dirsizedict if dirsizedict[d] <= sizemax]
+
+smalldirsizesum = sum(dirsizedict[d] for d in smalldirs)
+
+smallsizedir = {}
+for d in smalldirs:
+    smallsizedir[d] = dirsizedict[d]
+
+# Part 2
+    
+totalspace = 70000000
+
+spaceneeded = 30000000
+
+totalusedspace = dirsizedict['/-sub-/']
+
+freespace = totalspace - totalusedspace
+
+spacetofree = spaceneeded - freespace
+
+largeenoughdirs = [d for d in dirsizedict if dirsizedict[d] >= spacetofree]
+
+largeenoughdirdict = {d: dirsizedict[d] for d in largeenoughdirs}
+
+minsizedir = min(largeenoughdirdict, key=largeenoughdirdict.get)
+
+largeenoughdirdict[minsizedir]
