@@ -1,0 +1,124 @@
+import os
+
+os.chdir('C:/Users/Jo/Documents/Advent_of_Code_2022/Q13')
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+lines = lines.strip()
+lines = lines.split('\n')
+
+contents = [l[1:len(l)-1] for l in lines]
+
+test = [l.strip('][').split(',') for l in lines]
+    
+def split_string_into_items(thestring):
+    openbracketcount = 0
+    itemstart = 0
+    itemlist = []
+    for i in range(len(thestring)):
+        if thestring[i] == '[':
+            openbracketcount = openbracketcount + 1
+        elif thestring[i] == ']':
+            openbracketcount = openbracketcount - 1
+        elif thestring[i] == ',' and openbracketcount == 0:
+            thisitem = thestring[itemstart:i]
+            itemlist.append(thisitem)
+            itemstart = i + 1
+    if len(thestring) > itemstart:
+        itemlist.append(thestring[itemstart:len(thestring)])
+    return itemlist
+
+def compare_lists(l1, l2):
+    if len(l1) == 0 and len(l2) > 0:
+        return 0
+    for j in range(len(l1)):
+        if len(l2) < j+1: # Second list is too short
+            return 1
+        elif l1[j] == '' and l2[j] == '':
+            continue # Both empty
+        elif l1[j] == '' and not l2[j] == '':
+            return 0 # l1 item ran out of items first
+        elif not l1[j] == '' and l2[j] == '':
+            return 1
+        elif l1[j][0] == '[' and l2[j][0] == '[': # Both items are lists
+            newlist1 = split_string_into_items(l1[j][1:len(l1[j])-1])
+            newlist2 = split_string_into_items(l2[j][1:len(l2[j])-1])
+            res = compare_lists(newlist1, newlist2)
+            if res != -1:
+                return res
+            continue
+        elif l1[j][0] == '[' and not l2[j][0] == '[':
+            l2list = '[' + l2[j] + ']'
+            res = compare_lists(split_string_into_items(l1[j][1:len(l1[j])-1]),split_string_into_items(l2list[1:len(l2list)-1]))
+            if res != -1:
+                return res
+            continue
+        elif l2[j][0] == '[' and not l1[j][0] == '[':
+            l1list = '[' + l1[j] + ']'
+            res = compare_lists(split_string_into_items(l1list[1:len(l1list)-1]),split_string_into_items(l2[j][1:len(l2[j])-1]))
+            if res != -1:
+                return res
+            continue
+        else:
+            num1 = int(l1[j])
+            num2 = int(l2[j])
+            if num1 < num2:
+                return 0
+            elif num1 > num2:
+                return 1
+            else:
+                continue
+    if len(l1) < len(l2):
+        return 0
+    return -1
+            
+packets = [split_string_into_items(l) for l in contents]
+packets1 = [packets[3*i + j] for i in range(int(len(packets)/3)+1) for j in range(2)]
+            
+testlist1 = packets1[2*102]
+testlist2 = packets1[2*102+1]
+
+#testlist1 = ['[2,3,4]']
+#testlist2 = ['4']
+
+compare_lists(testlist1, testlist2)
+compare_lists(testlist2, testlist1)
+
+listcomparisons = []
+for k in range(int(len(packets1)/2)):
+    print(k)
+    listcomparisons.append(compare_lists(packets1[2*k], packets1[2*k+1]))
+
+listcomparisons = [0 if item == -1 else item for item in listcomparisons]
+
+indices = [i+1 for i in range(len(listcomparisons)) if listcomparisons[i] == 0]
+
+sum(indices)
+
+#5720
+
+# Part 2
+
+newpackets = packets1
+newpackets.append(['[2]'])
+newpackets.append(['[6]'])
+
+def sortkeyfn(l1, l2):
+    res = compare_lists(l1, l2)
+    if res == 1:
+        return 1
+    else:
+        return -1
+
+from functools import cmp_to_key
+orderedlist = sorted(newpackets, key=cmp_to_key(sortkeyfn))
+orderedlist = newpackets.sort(key = compare_lists)
+
+first = [i + 1 for i in range(len(orderedlist)) if orderedlist[i] == ['[2]']][0]
+second = [i + 1 for i in range(len(orderedlist)) if orderedlist[i] == ['[6]']][0]
+
+first*second
