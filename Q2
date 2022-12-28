@@ -1,0 +1,58 @@
+# Q2
+
+import pandas as pd
+import numpy as np
+
+data = pd.read_csv('input.txt', sep = ' ', index_col=None, header=None)
+data.set_axis(['Them', 'Me'], axis=1, inplace=True)
+
+# Calculate win, lose, or draw
+# A = Rock, B = Paper, C = Scissors
+df = data
+
+df = df.replace('A', 1)
+df = df.replace('B', 2)
+df = df.replace('C', 3)
+df = df.replace('X', 1)
+df = df.replace('Y', 2)
+df = df.replace('Z', 3)
+
+df['diff'] = df['Me'] - df['Them']
+df = df.replace(-2, 1)
+df = df.replace(-1, 2)
+
+def score(val):
+    if val == 0:
+        return 3
+    elif val == 1:
+        return 6
+    elif val == 2:
+        return 0
+    
+df['winlosescore'] = df['diff'].apply(score)
+df['totalscore'] = df['Me'] + df['winlosescore']
+
+df['totalscore'].sum()
+
+# X means you need to lose, Y means you need to end the round in a draw, and Z means you need to win.
+
+def mynewmove(row):
+    if row['Me'] == 1:
+        return row['Them'] - 1
+    elif row['Me'] == 2:
+        return row['Them']
+    elif row['Me'] == 3:
+        return row['Them'] + 1
+    
+df['MyNewMove'] = df.apply (lambda row: mynewmove(row), axis=1)
+
+df = df.replace(0, 3)
+df = df.replace(4, 1)
+
+df['newdiff'] = df['MyNewMove'] - df['Them']
+df = df.replace(-2, 1)
+df = df.replace(-1, 2)
+df['newwinlosescore'] = df['newdiff'].apply(score)
+
+df['newtotalscore'] = df['MyNewMove'] + df['newwinlosescore']
+df['newtotalscore'].sum()
