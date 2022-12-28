@@ -1,0 +1,157 @@
+import os
+
+os.chdir('C:/Users/Jo/Documents/Advent_of_Code_2022/Q15')
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+lines = lines.strip()
+lines = lines.split('\n')
+
+Sxcoords = [int((l.split('Sensor at x=')[1]).split(',')[0]) for l in lines]
+Sycoords = [int((l.split(': closest beacon')[0]).split('y=')[1]) for l in lines]
+Scoords = list(zip(Sxcoords, Sycoords))
+
+Bxcoords = [int((l.split('beacon is at x=')[1]).split(',')[0]) for l in lines]
+Bycoords = [int((l.split('beacon is at x=')[1]).split(', y=')[1]) for l in lines]
+Bcoords = list(zip(Bxcoords, Bycoords))
+
+# Find min/max x/y
+# Take s_x - diff(s_x, b_x) for each x and then min
+# Likewise for y and max
+
+N = len(Scoords)
+
+# Manhatten norm
+sbdistlist = [abs((Sxcoords[i] - Bxcoords[i])) + abs((Sycoords[i] - Bycoords[i])) for i in range(N)]
+minxlist = [Sxcoords[i] - sbdistlist[i] for i in range(N)]
+maxxlist = [Sxcoords[i] + sbdistlist[i] for i in range(N)]
+minylist = [Sycoords[i] - sbdistlist[i] for i in range(N)]
+maxylist = [Sycoords[i] + sbdistlist[i] for i in range(N)]
+
+minx = min(minxlist)
+maxx = max(maxxlist)
+miny = min(minylist)
+maxy = max(maxylist)
+
+xwidth = maxx - minx + 1
+yheight = maxy - miny + 1
+
+#grid = np.zeros((xwidth, yheight), dtype = int)
+
+therow = np.zeros(yheight, dtype = int)
+
+min(sbdistlist)
+# No sensor is on a beacon
+
+# for i in range(N):
+#     x,y = Scoords[i]
+#     d = sbdistlist[i]
+#     b1,b2 = Bcoords[i]
+#     print('d = ', d)
+#     for i in range(d + 1):
+#         for j in range(d + 1 - i):
+#             for xsign in [-1, 1]:
+#                 for ysign in [-1, 1]:
+#                     xnew = int(x + xsign*i - minx)
+#                     ynew = int(y + ysign*j - miny)
+#                     if grid[xnew,ynew] == 0:
+#                         grid[xnew,ynew] = -1
+#     print(x-minx,y-miny)
+#     if grid[x-minx,y-miny] != 5:
+#         grid[x-minx,y-miny] = 2
+#     grid[b1-minx,b2-miny] = 5
+   
+yofinterest = 10
+#yofinterest = 2000000
+# rown = yofinterest - miny
+# yrow = grid[:,rown]
+# yrowlist = list(yrow)
+
+# sum(1 for entry in yrowlist if entry == -1 or entry == 2)
+
+def dist(a, b):
+    return abs(b[0]-a[0]) + abs(b[1]-a[1])
+
+def compare(l1, l2):
+    comparisons = [True if l1[i] <= l2[i] else False for i in range(len(l1))]
+    if True in set(comparisons):
+        return 1
+    else:
+        return 0
+
+count = 0
+beaconsinrow = set([b for b in Bcoords if b[1] == yofinterest])
+for i in range(yheight):
+    print(i)
+    pt = [i + minx,yofinterest]
+    if tuple(pt) in beaconsinrow:
+        continue
+    else:
+        Sdistlist = [dist(pt, s) for s in Scoords]
+        if compare(Sdistlist, sbdistlist) == 1:
+            therow[i] = -1
+            count = count + 1
+            
+# 4793062
+            
+# Improve this?
+            
+maxlim = 4000000
+#maxlim = 20
+
+def findi(l1, l2):
+    comparisons = [i if l1[i] <= l2[i] else 100 for i in range(len(l1))]
+    return min(comparisons)
+
+def findnewpt(pt, i):
+    s = Scoords[i]
+    ydist = abs(pt[1] - s[1])
+    maxxdist = sbdistlist[i] - ydist
+    xval = s[0] + maxxdist + 1
+    return [xval, pt[1]]
+
+#j = yofinterest       
+#i = 0
+def findnextpt(i, j):
+    pt = [i, j]
+    Sdistlist = [dist(pt, s) for s in Scoords]
+    nptidx = findi(Sdistlist, sbdistlist)
+    if nptidx == 100:
+        return [-1, -1] # This is the point
+    else:
+        newpt = findnewpt(pt, nptidx)
+        if newpt == pt:
+            return [-100, -100]
+        return newpt
+
+#pt = [i, j]
+def checkrow(j):
+    pt = [0, j]
+    while pt[0] <= maxlim:
+        print(pt)
+        i = pt[0]
+        j = pt[1]
+        oldpt = pt
+        pt = findnextpt(i, j)
+        if pt[0] > maxlim:
+            return [-1, -1]
+        if pt[0] == -1:
+            print('Point is: ', oldpt)
+            return oldpt
+        elif pt[0] == -100:
+            print('Error', oldpt)
+            return [-100, -100]
+    print(pt)
+    return [0, 0]
+    
+for j in range(0, maxlim):
+    res = checkrow(j)
+    if res[0] != -1:
+        break
+    
+x,y = [2706598, 3253551]
+maxlim*x + y
