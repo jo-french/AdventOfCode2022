@@ -1,0 +1,158 @@
+import os
+
+os.chdir('C:/Users/Jo/Documents/Advent_of_Code_2022/Q14')
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+lines = lines.strip()
+lines = lines.split('\n')
+
+rockpaths = [l.split(' -> ') for l in lines]
+rockpaths = [[path.split(',') for path in rp] for rp in rockpaths]
+rockpaths = [[[int(p[1]), int(p[0])] for p in rockpaths[i]] for i in range(len(rockpaths))]
+
+def plot_path(gridarray, path):
+    pt = [path[0][0], path[0][1] - minx + ext]
+    if len(path) == 1:
+        gridarray[path[0][0], path[0][1] - minx + ext] = 5 # 1 square of rock
+    else:
+        for i in range(len(path)-1):
+            # Check this doesn't need 1 added to first coord (shouldn't affect answer)
+            newpt = [path[i+1][0], path[i+1][1] - minx + ext]
+            if newpt[0] != pt[0]:
+                thisx = pt[1]
+                diff = newpt[0] - pt[0]
+                print(pt)
+                gridarray[pt[0], pt[1]] = 5
+                for rockj in range(min(0, diff),  max(0, diff) + 1):
+                    thispt0 = pt[0] + rockj
+                    gridarray[thispt0, thisx] = 5
+            elif newpt[1] != pt[1]:
+                thisy = pt[0]
+                diff = newpt[1] - pt[1]
+                print(pt)
+                gridarray[pt[0], pt[1]] = 5
+                for rockj in range(min(0, diff),  max(0, diff) + 1):
+                    thispt1 = pt[1] + rockj
+                    gridarray[thisy, thispt1] = 5
+            pt = newpt
+
+addon = 10
+ext = int(addon/2)
+
+minx = min(p[1] for i in range(len(rockpaths)) for p in rockpaths[i] )
+maxx = max(p[1] for i in range(len(rockpaths)) for p in rockpaths[i] )
+miny = 0
+maxy = max(p[0] for i in range(len(rockpaths)) for p in rockpaths[i] )
+
+grid = np.zeros((maxy + 1, maxx - minx + addon))
+
+
+#plot_path(grid, rockpaths[0])
+
+def simulate_sand(grid):
+    keepmoving = True
+    s = [0, 500]
+    s = [s[0], s[1] - minx + ext]
+    grid[s[0], s[1]] = 1
+    while keepmoving == True:
+        if s[0] + 1 > maxy:
+            keepmoving = False
+            return 1
+        elif grid[s[0] + 1, s[1]] == 0:
+            grid[s[0] + 1, s[1]] = 1
+            grid[s[0], s[1]] = 0
+            s = [s[0] + 1, s[1]]
+        elif grid[s[0] + 1, s[1] - 1] == 0:
+            grid[s[0] + 1, s[1] - 1] = 1
+            grid[s[0], s[1]] = 0
+            s = [s[0] + 1, s[1] - 1]
+        elif grid[s[0] + 1, s[1] + 1] == 0:
+            grid[s[0] + 1, s[1] + 1] = 1
+            grid[s[0], s[1]] = 0
+            s = [s[0] + 1, s[1] + 1]
+        else:
+            keepmoving = False
+    return 0
+
+for rpath in rockpaths:
+    plot_path(grid, rpath)
+
+#griddf = pd.DataFrame(grid)    
+#griddf.to_csv('grid.csv')
+
+count = 0
+res = 0
+while res == 0:
+    res = simulate_sand(grid)
+    if res == 0:
+        count = count + 1
+                
+#for i in range(50):
+#    simulate_sand(grid)
+                
+#500 - minx + ext   
+
+ # 509 too low. Missed + 1 in ranges.     
+         
+# 715   
+   
+# Part 2
+
+addon = 1000000
+ext = int(addon/2)
+
+minx = min(p[1] for i in range(len(rockpaths)) for p in rockpaths[i] )
+maxx = max(p[1] for i in range(len(rockpaths)) for p in rockpaths[i] )
+miny = 0
+maxy = max(p[0] for i in range(len(rockpaths)) for p in rockpaths[i] ) + 1
+
+grid = np.zeros((maxy + 1, maxx - minx + addon))
+        
+#plot_path(grid, rockpaths[0])
+
+def simulate_sand(grid):
+    keepmoving = True
+    s = [0, 500]
+    s = [s[0], s[1] - minx + ext]
+    grid[s[0], s[1]] = 1
+    maxgridx = maxx - minx + addon
+    while keepmoving == True:
+        if s[1] == 0 or s[1] == maxgridx - 1:
+            keepmoving = False
+            return -1
+        elif s[0] == maxy:
+            keepmoving = False
+            return 0
+        elif grid[s[0] + 1, s[1]] == 0:
+            grid[s[0] + 1, s[1]] = 1
+            grid[s[0], s[1]] = 0
+            s = [s[0] + 1, s[1]]
+        elif grid[s[0] + 1, s[1] - 1] == 0:
+            grid[s[0] + 1, s[1] - 1] = 1
+            grid[s[0], s[1]] = 0
+            s = [s[0] + 1, s[1] - 1]
+        elif grid[s[0] + 1, s[1] + 1] == 0:
+            grid[s[0] + 1, s[1] + 1] = 1
+            grid[s[0], s[1]] = 0
+            s = [s[0] + 1, s[1] + 1]
+        else:
+            keepmoving = False
+    return 0
+
+for rpath in rockpaths:
+    plot_path(grid, rpath)
+  
+sandstart = [0, 500 - minx + ext]
+count = 0
+res = 0
+while grid[sandstart[0], sandstart[1]] != 1:
+    res = simulate_sand(grid)
+    count = count + 1
+    if res == -1:
+        print("Out of bounds error")
+        break
