@@ -1,0 +1,75 @@
+# Q5
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+
+# Set up crates and instructions
+
+lines = lines.strip()
+
+cratearea = lines.split('\n\n')[0]
+
+instructions = (lines.split('\n\n')[1]).split('\n')
+
+# Column numbers:
+
+# 1: 1
+# 2: 5
+# 3: 9
+# n + 1: 4n + 1
+
+cratelines = cratearea.split('\n')
+cratelines[0] = '                ' + cratelines[0]
+
+crates = []
+for crate_i in range(9):
+    crate_string = ''
+    for j in range(8):
+        if len(cratelines[j])>=4*crate_i+1:
+            if cratelines[j][4*crate_i+1] != ' ':
+                crate_string = crate_string+(cratelines[j][4*crate_i+1])
+    crates.append(crate_string)
+                
+crates = [c[::-1] for c in crates]
+
+# Rearrange crates
+n_move = [int(a.split('move ')[1].split(' from')[0]) for a in instructions]
+move_from = [int(a.split('from ')[1].split(' to')[0]) for a in instructions]
+move_to = [int(a.split('to ')[1]) for a in instructions]
+
+# Part 1
+
+for i in range(len(instructions)):
+    print(i)
+    c1 = move_from[i] - 1
+    c2 = move_to[i] - 1
+    startn = len(crates[c1])-n_move[i]
+    crates[c2] = crates[c2] + (crates[c1][startn:])[::-1]
+    crates[c1] = crates[c1][:startn]
+
+finalstring = ''
+for i in range(len(crates)):
+    finalstring = finalstring + crates[i][len(crates[i])-1]
+
+finalstring        
+
+# Part 2
+# Reset crates
+# Move the crates without reversing the order
+
+for i in range(len(instructions)):
+    print(i)
+    c1 = move_from[i] - 1
+    c2 = move_to[i] - 1
+    startn = len(crates[c1])-n_move[i]
+    crates[c2] = crates[c2] + (crates[c1][startn:])
+    crates[c1] = crates[c1][:startn]
+    
+finalstring = ''
+for i in range(len(crates)):
+    finalstring = finalstring + crates[i][len(crates[i])-1]
+
+finalstring
