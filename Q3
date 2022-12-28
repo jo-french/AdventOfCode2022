@@ -1,0 +1,49 @@
+# Q3
+
+import pandas as pd
+import numpy as np
+
+ord('a')
+ord('A')
+ord('Z') - ord('A') + 27
+ord('b')
+ord('b') - ord('a') + 1
+
+# Convert lc letter to number by ord(letter) - ord('a') + 1
+# Convert uc letter to number by ord(letter) - ord('A') + 27
+
+with open('input.txt') as f:
+    lines = f.read()
+
+lines = lines.strip()
+backpacks = lines.split('\n')
+
+lengths = [len(s) for s in backpacks]
+mids = [int(l/2) for l in lengths]
+
+part1s = [backpacks[i][0:mids[i]] for i in range(len(backpacks))]
+part2s = [backpacks[i][mids[i]:] for i in range(len(backpacks))]
+
+intersections = [set(part1s[i]).intersection(set(part2s[i])) for i in range(len(backpacks))]
+answers = [list(tVal) for tVal in intersections]
+answers = [a[0] for a in answers]
+
+def getPriority(letter):
+    if letter.isupper():
+        return ord(letter) - ord('A') + 27
+    else:
+        return ord(letter) - ord('a') + 1
+    
+priorities = [getPriority(l) for l in answers]
+total = sum(priorities)
+
+# Part2
+elfgroups = []
+for i in range(100):
+    elfgroups.append(set(backpacks[3*i]).intersection(set(backpacks[3*i+1]), set(backpacks[3*i+2])))
+
+eganswers = [list(tVal) for tVal in elfgroups]
+eganswers = [a[0] for a in eganswers]
+
+egpriorities = [getPriority(egl) for egl in eganswers]
+egtotal = sum(egpriorities)
