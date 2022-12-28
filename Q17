@@ -1,0 +1,328 @@
+import os
+
+os.chdir('C:/Users/Jo/Documents/Advent_of_Code_2022/Q17')
+
+import pandas as pd
+import numpy as np
+
+import math
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+lines = lines.strip()
+lines = list(lines)
+
+w = 7
+h = 5000
+
+# s = [0,2]
+
+# class shape(num):
+#     def __init__(self):
+#         if num == 1: # match/case statement
+#             coords = [[0,2],[0,3],[0,5],[0,6]]
+#         elif num == 2:
+#             coords = 
+#     self.coords
+
+rocklim = 2022
+
+def simulate_shape(n, flevel):
+    lowestx = flevel - 4
+    if n == 1:
+        return [[lowestx,2],[lowestx,3],[lowestx,4],[lowestx,5]]
+    elif n == 2:
+        return [[lowestx-2,3],[lowestx-1,2],[lowestx-1,3],[lowestx-1,4],[lowestx,3]]
+    elif n == 3:
+        return [[lowestx-2,4],[lowestx - 1,4],[lowestx,2],[lowestx,3],[lowestx,4]]
+    elif n == 4:
+        return [[lowestx-3,2],[lowestx-2,2],[lowestx-1,2],[lowestx,2]]
+    elif n == 5:
+        return [[lowestx-1,2],[lowestx-1,3],[lowestx,2],[lowestx,3]]
+    
+def drop_shape(grid, ccoords, lines, linen, flevel):
+    moveshapevar = True
+    while moveshapevar == True:
+        #print(lines[linen])
+        ccoords = push_shape(grid, ccoords, lines, linen)
+        linen = linen + 1
+        if linen >= len(lines):
+            print('New lines')
+            linen = linen % len(lines)
+        res = move_shape_down(grid, ccoords)
+        if res[0] == -1:
+            moveshapevar = False
+            ccoords = res[1]
+            flevel = min(x for x in range(h) if 1 in [grid[x,y] for y in range(w)])
+            return linen, flevel
+        ccoords = res[1]
+        
+def move_shape_down(grid, coords):
+    newcoords = [[x+1,y] for [x,y] in coords]
+    if h in [c[0] for c in newcoords]: # Reached the floor
+        return [-1, coords]
+    else:
+        coorddiff = set((x,y) for x,y in newcoords).difference(set((x,y) for x,y in coords))
+        if 1 in [grid[x,y] for x,y in coorddiff]: # Shape cannot move there
+            return [-1, coords]
+        else:
+            for [x,y] in newcoords:
+                grid[x,y] = 1
+            for [x,y] in coords:
+                if not [x,y] in newcoords:
+                    grid[x,y] = 0
+            return [0, newcoords]
+    
+def push_shape(grid, coords, lines, linen):
+    if lines[linen] == '>':
+        newcoords = push_shape_right(grid, coords)
+    elif lines[linen] == '<':
+        newcoords = push_shape_left(grid, coords)
+    return newcoords
+
+def push_shape_right(grid, coords):
+    newcoords = [[x, y+1] for [x,y] in coords]
+    if 7 in [c[1] for c in newcoords]:
+        return coords
+    else:
+        coorddiff = set((x,y) for x,y in newcoords).difference(set((x,y) for x,y in coords))
+        if 1 in [grid[x,y] for x,y in coorddiff]: # Shape cannot move there
+            return coords
+        for [x,y] in newcoords:
+            grid[x,y] = 1
+        for [x,y] in coords:
+            if not [x,y] in newcoords:
+                grid[x,y] = 0
+        return newcoords
+    
+def push_shape_left(grid, coords):
+    newcoords = [[x, y-1] for [x,y] in coords]
+    if -1 in [c[1] for c in newcoords]:
+        return coords
+    else:
+        coorddiff = set((x,y) for x,y in newcoords).difference(set((x,y) for x,y in coords))
+        if 1 in [grid[x,y] for x,y in coorddiff]: # Shape cannot move there
+            return coords
+        for [x,y] in newcoords:
+            grid[x,y] = 1
+        for [x,y] in coords:
+            if not [x,y] in newcoords:
+                grid[x,y] = 0
+        return newcoords
+    
+rocklim = 2022
+box = np.zeros((h,w), dtype = int)
+shapecount = 0
+linen = 0
+contvar = True
+flevel = h
+while contvar == True:
+    for shapen in range(5):
+        #print(shapen)
+        thiscoords = simulate_shape(shapen+1, flevel)
+        # Plot shape
+        for c in thiscoords:
+            box[c[0],c[1]] = 1
+        linen, flevel = drop_shape(box, thiscoords, lines, linen, flevel)
+        shapecount = shapecount + 1
+        if shapecount == rocklim:
+            contvar = False
+            break
+
+h - min(x for x in range(h) if 1 in [box[x,y] for y in range(w)])
+
+# 3235
+
+# Part 2
+
+# Find cycles. Must be periodic.
+
+# Find the first point (after 0) where we start lines again at the beginning of dropping shape 0.
+# Can't find it.
+# Try to find any point where we start to simulate the shape 0 at the same line number as a previous time.
+# By the Pigeon Hole Principle, this exists.
+
+totalshapes = 1000000000000
+
+h = 10000
+
+rocklim = 3000
+box = np.zeros((h,w), dtype = int)
+shapecount = 0
+linen = 0
+contvar = True
+flevel = h
+shape0lines = {}
+while contvar == True:
+    for shapen in range(5):
+        if shapen == 0:
+            if linen not in shape0lines:
+                shape0lines[linen] = shapecount + 1
+            else:
+                # Seen this linen before. Detected period.
+                print('Period: ', shape0lines[linen], ', ', shapecount + 1)
+                contvar = False
+                break
+        thiscoords = simulate_shape(shapen+1, flevel)
+        # Plot shape
+        for c in thiscoords:
+            box[c[0],c[1]] = 1
+        linen, flevel = drop_shape(box, thiscoords, lines, linen, flevel)
+        shapecount = shapecount + 1
+        if shapecount == rocklim:
+            contvar = False
+            break
+
+# test file
+# 16, 51
+# Period = shape 16 plus 35 shapes in between (16th to 50th is one cycle)
+# Find the height at 15 shapes plus the height of the next 35 x (total shapes - 15)/35 plus remainder height
+
+ncycles = math.trunc((totalshapes-15)/35)
+remainder = totalshapes - 15 - ncycles * 35
+
+# Find height after 15 shapes
+
+h = 5000
+rocklim = 16
+box = np.zeros((h,w), dtype = int)
+shapecount = 0
+linen = 0
+contvar = True
+flevel = h
+while contvar == True:
+    for shapen in range(5):
+        #print(shapen)
+        thiscoords = simulate_shape(shapen+1, flevel)
+        # Plot shape
+        for c in thiscoords:
+            box[c[0],c[1]] = 1
+        linen, flevel = drop_shape(box, thiscoords, lines, linen, flevel)
+        shapecount = shapecount + 1
+        if shapecount == rocklim:
+            contvar = False
+            break
+
+h - min(x for x in range(h) if 1 in [box[x,y] for y in range(w)])
+# 25
+
+# Height after next 35
+rocklim = 15+35
+#78
+
+heightof35cycle = 78 - 25
+
+height = 25 + heightof35cycle * ncycles
+
+# 1,514,285,714,288
+
+# input file
+# Period:  206 ,  1926
+numshapesincycle = 1926-206
+# 1720
+ncycles = math.trunc((totalshapes - 205)/numshapesincycle)
+# 581395348
+remainder = totalshapes - 205 - ncycles*numshapesincycle
+# 1235
+# Find height for first 205 then next 1720 then next 1235
+
+h = 15000
+rocklim = 6600
+box = np.zeros((h,w), dtype = int)
+shapecount = 0
+linen = 0
+contvar = True
+flevel = h
+while contvar == True:
+    for shapen in range(5):
+        #print(shapen)
+        thiscoords = simulate_shape(shapen+1, flevel)
+        # Plot shape
+        for c in thiscoords:
+            box[c[0],c[1]] = 1
+        linen, flevel = drop_shape(box, thiscoords, lines, linen, flevel)
+        shapecount = shapecount + 1
+        if shapecount == rocklim:
+            contvar = False
+            break
+
+h - min(x for x in range(h) if 1 in [box[x,y] for y in range(w)])
+
+# Change rocklim t0 205, 1925, and 205 + 1235 for the heights to add and multiply
+# After 205
+# 336
+
+# After 1925 (next 1720)
+# 3072
+
+#After 1925 + 1720 = 3645
+# 5810
+
+5810 - 3072
+# 2738
+
+# After 1925 + 1720 + 1720 = 5365
+# 8548
+8548 - 5810
+# 2738
+
+initialheight = 3072
+
+cycleheight = 5810 - 3072
+# 2738
+
+numshapesincycle = 1720
+ncycles = math.trunc((totalshapes-1925)/1720)
+# 581395347
+
+remainder = totalshapes - 1925 - ncycles*numshapesincycle
+# 1235
+
+# height after 1925 + 1235 = 3160
+# 5024
+5024 - 3072
+# 1952
+
+# height after 3645 + 1235 = 4880
+# 7762
+7762 - 5810
+# 1952
+
+# After 5365 + 1235 = 6600
+# 10500
+10500 - 8548
+# 1952
+
+#3072 - 336
+# 2736
+
+# After 1440
+# 2286
+
+# After 3160
+# 5024
+
+rheight = 2286 - 336
+# 1950
+
+# Check
+5024 - 3072
+# 1952
+
+# After 1925 + 1720 + 1235 = 4880
+# 7762
+7762 - 2 * cycleheight - 336
+
+#1786046509392
+
+height = 3072 + 2738 * ncycles + 1952
+
+#1786046511342
+height
+
+# Too low
+# 1590697674414
+
+# First cycle wasn't a stable cycle. Needed to count that in the initial non-cycle height.
+# Answer: 1591860465110
