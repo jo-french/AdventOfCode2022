@@ -1,0 +1,83 @@
+# Q8
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+
+lines = lines.strip()    
+lines = lines.split('\n')
+
+lines = [list(l) for l in lines]
+
+df = np.array(lines)
+
+ntrees = 99*99
+
+treelist = []
+
+def checktreevisible(data, i, j):
+    treeheight = data[i, j]
+    isvisible = 0
+    v1 = 0
+    v2 = 0
+    v3 = 0
+    v4 = 0
+    for k in range(99):
+        if data[k, j] >= data[i, j]:
+            if k < i:
+                v1 = 1
+            if k > i:
+                v2 = 1
+        if data[i, k] >= data[i, j]:
+            if k < j:
+                v3 = 1
+            if k > j:
+                v4 = 1
+    if v1 == 0 or v2 == 0 or v3 == 0 or v4 == 0:
+        return 1
+    else:
+        return 0
+    
+
+for i in range(99):
+    for j in range(99):
+        treelist.append(checktreevisible(df, i, j))
+
+sum(treelist)
+
+#Part 2
+
+
+def countnumberseen(l, h):
+    nseen = 0
+    for a in l:
+        if a < h:
+            nseen = nseen + 1
+        if a >= h:
+            nseen = nseen + 1
+            break
+    return nseen
+
+def countvisibletrees(data, i, j):
+    height = int(data[i, j])
+    treesabove = [int(data[k, j]) for k in range(99) if k < i]
+    treesabove.reverse()
+    n1 = countnumberseen(treesabove, height)
+    treesbelow = [int(data[k, j]) for k in range(99) if k > i]
+    n2 = countnumberseen(treesbelow, height)
+    treesleft = [int(data[i, k]) for k in range(99) if k < j]
+    treesleft.reverse()
+    n3 = countnumberseen(treesleft, height)
+    treesright = [int(data[i, k]) for k in range(99) if k > j]
+    n4 = countnumberseen(treesright, height)
+    return n1 * n2 * n3 * n4
+
+treelist1 = []
+
+for i in range(99):
+    for j in range(99):
+        treelist1.append(countvisibletrees(df, i, j))
+
+np.max(treelist1)        
