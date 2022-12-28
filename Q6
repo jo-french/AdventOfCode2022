@@ -1,0 +1,38 @@
+# Q6
+
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+import collections
+
+maxidx = 3
+thisfour = collections.deque(lines[0:4])
+
+print(thisfour)
+
+while len(set(thisfour)) < 4:
+    print(maxidx)
+    maxidx = maxidx + 1
+    thisfour.popleft()
+    thisfour.append(lines[maxidx])
+    
+print(maxidx + 1)
+
+# Part 2
+# Change to 14 characters
+
+maxidx = 13
+thisfourteen = collections.deque(lines[0:14])
+
+print(thisfourteen)
+
+while len(set(thisfourteen)) < 14:
+    print(maxidx)
+    maxidx = maxidx + 1
+    thisfourteen.popleft()
+    thisfourteen.append(lines[maxidx])
+    
+print(maxidx + 1)
