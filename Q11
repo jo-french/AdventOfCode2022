@@ -1,0 +1,146 @@
+# Q11
+
+import os
+
+os.chdir('C:/Users/Jo/Documents/Advent_of_Code_2022/Q11')
+
+import pandas as pd
+import numpy as np
+
+import math
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+lines = lines.strip()
+lines = lines.split('\n')
+
+#nmonkeys = 4
+nmonkeys = 8
+
+items = [lines[1 + 7 * i].split('items: ')[1] for i in range(nmonkeys)]
+items = [iteml.split(',') for iteml in items]
+items = [[int(a.strip()) for a in iteml] for iteml in items]
+inspected = [[] for i in range(len(items))]
+true = [int(lines[4 + 7 * i].split('monkey ')[1]) for i in range(nmonkeys)]
+false = [int(lines[5 + 7 * i].split('monkey ')[1]) for i in range(nmonkeys)]
+testnum = [int(lines[3 + 7 * i].split('by ')[1]) for i in range(nmonkeys)]
+print([lines[2 + 7 * i].split('= old ')[1] for i in range(nmonkeys)])
+#opnum = [19, 6, 0, 3]
+opnum = [3, 11, 6, 4, 8, 2, 0, 5] # 0 = old
+# 1 = *, 2 = +
+#opact = [1, 2, 1, 2]
+opact = [1, 1, 2, 2, 2, 2, 1, 2]
+
+def op(i, itnum, opnum, opact):
+    iopact = opact[i]
+    if opnum[i] == 0:
+        opn = itnum
+    else:
+        opn = opnum[i]
+    if iopact == 1:
+        return itnum * opn
+    else:
+        return itnum + opn
+    
+def opmod(i, itnum, opnum, opact, modnum, maxmult):
+    iopact = opact[i]
+    if opnum[i] == 0:
+        opn = itnum
+    else:
+        opn = opnum[i]
+    if iopact == 1:
+        if opnum[i] == 0:
+            return factormult(itnum, modnum, maxmult)
+        else:
+            return itnum * opn
+    else:
+        return itnum + opn
+    
+def factorise(n):
+    currentn = n
+    currentnfactors = []
+    sqrtn = math.trunc(np.sqrt(currentn))
+    for i in range(sqrtn + 1):
+        if i > 1:
+            if currentn % i == 0:
+                currentnfactors.append(i)
+                currentn = int(currentn / i)
+                otherfactors = factorise(currentn)
+                currentnfactors = currentnfactors + otherfactors
+                break
+    if len(currentnfactors) == 0:
+        currentnfactors = [n]
+    return currentnfactors
+
+def multsum(thisnum, j, modnum, maxmult):
+    divisor = math.trunc(j / maxmult)
+    remainder = j - divisor * maxmult
+    newnum = 0
+    for k in range(divisor):
+        tempnum = thisnum * maxmult
+        tempnum = tempnum % modnum
+        newnum = newnum + tempnum
+        newnum = newnum % modnum   
+    remnum = thisnum * remainder
+    remnum = remnum % modnum
+    newnum = newnum + remnum
+    newnum = newnum % modnum
+    return newnum
+    
+def factormult(itnum, modnum, maxmult):
+    factorsnum = []
+    factorsnum = factorise(itnum)
+    newnum = itnum
+    for j in factorsnum:
+        if j > maxmult:
+            newnum = multsum(newnum, j, modnum, maxmult)
+        else:
+            newnum = newnum * j
+        newnum = newnum % modnum
+    return newnum
+         
+def monkeyturn(i, items, opnum, opact, inspected, modnum = None, divide3 = True, usefactormult = False, maxmult = 200):
+    monkeyitems = items[i]
+    inspectedi = len(monkeyitems)
+    inspected[i].append(inspectedi)
+    for itnum in monkeyitems:
+        if usefactormult:
+            itnum = opmod(i, itnum, opnum, opact, modnum, maxmult)
+        else:
+            itnum = op(i, itnum, opnum, opact)
+        if divide3:
+            itnum = math.trunc(itnum / 3)
+        if not modnum == None:
+            itnum = itnum % modnum
+        if itnum % testnum[i] == 0:
+            items[true[i]].append(itnum)
+        else:
+            items[false[i]].append(itnum)
+    items[i] = []
+    
+# Part 1
+    
+for j in range(20):
+     for i in range(len(items)):
+         monkeyturn(i, items, opnum, opact, inspected)
+        
+res = [sum(insp) for insp in inspected]
+
+sortedres = sorted(res)
+answer = sortedres[6]*sortedres[7]
+
+# Part 2
+
+# Reload data
+
+modnum = np.prod(testnum)
+
+for j in range(10000):
+    for i in range(len(items)):
+        monkeyturn(i, items, opnum, opact, inspected, modnum, False, True)
+        
+res = [sum(insp) for insp in inspected]
+
+sortedres = sorted(res)
+answer = sortedres[6]*sortedres[7]
