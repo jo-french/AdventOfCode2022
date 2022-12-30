@@ -1,0 +1,100 @@
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+
+    
+lines = lines.strip()
+lines = lines.split('\n')
+lines = [int(l) for l in lines]
+
+# Check for duplicates
+
+# myfile = pd.read_csv('inputtest.txt', header=None)
+
+# a = myfile.duplicated()
+
+# mylist = list(myfile[0])
+# mylist[1304]
+# myindices = [i for i in range(len(mylist)) if mylist[i] == mylist[1304]]
+# mylist[794]
+
+N = len(lines)
+# Track the index of the items to handle duplicates
+pairs = list(zip(range(N), lines))
+
+for i in range(N):
+    print(i)
+    itemidx = [j for j in range(len(pairs)) if pairs[j][0] == i][0]
+    thisitem = pairs[itemidx]
+    moven = thisitem[1]
+    newidx = itemidx + moven
+    newidx = newidx % (N-1)
+    if newidx < itemidx:
+        print(i, 1)
+        pairs = pairs[0:newidx] + [thisitem] + pairs[newidx: itemidx] + pairs[itemidx + 1:N]
+    elif newidx > itemidx:
+        print(i,2)
+        pairs = pairs[0:itemidx] + pairs[itemidx+1:newidx+1]+ [thisitem] + pairs[newidx+1:N]
+    
+
+the0index = [j for j in range(N) if pairs[j][1] == 0]
+the0idx = the0index[0]
+groveindices = [(the0idx + i*1000) % N for i in range(1,4)]
+# 3257, 4257, 257
+sum(pairs[groveindices[i]][1] for i in range(len(groveindices)))
+
+#a = [[i for i in range(N) if pairs[i][0] == j] for j in range(5000)]
+
+#dfa = pd.DataFrame(a)
+#dfa.to_csv('testvals.csv', index = False, header = False)
+
+# 9945
+
+# Part 2
+
+multiplier = 811589153
+    
+with open('input.txt') as f:
+    lines = f.read()
+
+    
+lines = lines.strip()
+lines = lines.split('\n')
+lines = [int(multiplier * int(l)) for l in lines]
+
+N = len(lines)
+# Track the index of the items to handle duplicates
+pairs = list(zip(range(N), lines))
+
+def mix_pairs(pairs):
+    N = len(pairs)
+    for i in range(N):
+        print(i)
+        itemidx = [j for j in range(len(pairs)) if pairs[j][0] == i][0]
+        thisitem = pairs[itemidx]
+        moven = thisitem[1]
+        newidx = itemidx + moven
+        # if moven < 0:
+        #     newidx = newidx - 1
+        newidx = newidx % (N-1)
+        if newidx < itemidx:
+            pairs = pairs[0:newidx] + [thisitem] + pairs[newidx: itemidx] + pairs[itemidx + 1:N]
+        elif newidx > itemidx:
+            pairs = pairs[0:itemidx] + pairs[itemidx+1:newidx+1]+ [thisitem] + pairs[newidx+1:N]
+    return pairs
+            
+mixedpairs = mix_pairs(pairs)
+
+for i in range(9):
+    mixedpairs = mix_pairs(mixedpairs)
+    
+the0index = [j for j in range(N) if mixedpairs[j][1] == 0]
+the0idx = the0index[0]
+groveindices = [(the0idx + i*1000) % N for i in range(1,4)]
+# 3257, 4257, 257
+sum(pairs[groveindices[i]][1] for i in range(len(groveindices)))
+
+# Too high
+# 9872170457092
