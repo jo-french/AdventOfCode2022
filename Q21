@@ -1,0 +1,113 @@
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+
+    
+lines = lines.strip()
+lines = lines.split('\n')
+
+monkeys = [l.split(':')[0] for l in lines]
+len(set(monkeys))
+# All distinct
+
+monkeynumberdict = {}
+
+monkeyopdict = {}
+
+def process_monkey(monkey,monkeystr,monkeyopdict):
+    if monkeystr.isdigit():
+        monkeyopdict[monkey] = {'number': int(monkeystr)}
+    else:
+        m1 = monkeystr.split(' ')[0]
+        m2 = monkeystr.split(' ')[2]
+        op = monkeystr.split(' ')[1]
+        monkeyopdict[monkey] = {'mlist': [m1, m2], 'op': op}
+        
+for l in lines:
+    thismonkey = l.split(': ')[0]
+    thismonkeystr = l.split(': ')[1]
+    process_monkey(thismonkey, thismonkeystr, monkeyopdict)
+    
+shoutedmonkeys = set()
+unshoutedmonkeys = set(monkeys)
+
+def shoutop(n1, n2, op):
+    if op == '*':
+        return n1*n2
+    elif op == '+':
+        return n1+n2
+    elif op == '-':
+        return n1-n2
+    elif op == '/':
+        return n1/n2
+    
+def monkey_shout(monkey, monkeyopdict, monkeynumberdict, shoutedmonkeys):
+    monkeydict = monkeyopdict[monkey]
+    if 'number' in monkeydict:
+        monkeynumberdict[monkey] = monkeydict['number']
+        shoutedmonkeys.add(monkey)
+    else:
+        m1,m2 = monkeydict['mlist']
+        if m1 in monkeynumberdict and m2 in monkeynumberdict:
+            n1 = monkeynumberdict[m1]
+            n2 = monkeynumberdict[m2]
+            monkeynum = shoutop(n1,n2,monkeydict['op'])
+            monkeynumberdict[monkey] = monkeynum
+            shoutedmonkeys.add(monkey)
+
+keepshouting = True          
+while keepshouting == True:
+    for monkey in unshoutedmonkeys:
+        monkey_shout(monkey, monkeyopdict, monkeynumberdict, shoutedmonkeys)
+    unshoutedmonkeys = unshoutedmonkeys.difference(shoutedmonkeys)
+    if 'root' in shoutedmonkeys:
+        keepshouting = False
+  
+monkeynumberdict['root']      
+
+# 194058098264286   
+
+# Part 2
+
+#humnlines = [l for l in lines if 'humn' in l] 
+#monkeyopdict['root']
+
+monkeyopdict['root']['op'] = '-'
+
+def solver(n):
+    monkeyopdict['humn']['number'] = n
+    shoutedmonkeys = set()
+    unshoutedmonkeys = set(monkeys)
+    monkeynumberdict = {}
+    keepshouting = True          
+    while keepshouting == True:
+        for monkey in unshoutedmonkeys:
+            monkey_shout(monkey, monkeyopdict, monkeynumberdict, shoutedmonkeys)
+            unshoutedmonkeys = unshoutedmonkeys.difference(shoutedmonkeys)
+            if 'root' in shoutedmonkeys:
+                keepshouting = False
+    return monkeynumberdict['root']
+
+from scipy.optimize import root,fsolve, fmin
+
+root(solver, -100)
+
+root(solver, 5)
+
+fsolve(solver, [0,1])
+
+solver(0)
+# 119707860117380
+
+solver(10)
+# 119707860117047
+
+#solver(1186)
+
+solver(1186) - solver(500000000)
+
+solver(5000000)
+
+fmin(solver, 0)
