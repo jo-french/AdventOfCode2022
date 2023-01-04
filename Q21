@@ -111,3 +111,34 @@ solver(1186) - solver(500000000)
 solver(5000000)
 
 fmin(solver, 0)
+
+solver(0)
+# >0
+
+# Root find by hand
+solver(119707860117380)
+# <0
+
+# Interval bisection
+a = 0
+b = 119707860117380
+keepgoing = True
+while keepgoing == True:
+    y1 = solver(a)
+    y2 = solver(b)
+    if y1 == 0:
+        answer = a
+        keepgoing = False
+    elif y2 == 0:
+        answer = b
+        keepgoing = False
+    elif y1 > 0 and y2 < 0:
+        c = (a+b)/2
+        if solver(c) > 0:
+            a = c
+        else:
+            b = c
+        
+# 3592056845086.0
+
+solver(3592056845086)
