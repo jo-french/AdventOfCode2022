@@ -94,7 +94,7 @@ the0index = [j for j in range(N) if mixedpairs[j][1] == 0]
 the0idx = the0index[0]
 groveindices = [(the0idx + i*1000) % N for i in range(1,4)]
 # 3257, 4257, 257
-sum(pairs[groveindices[i]][1] for i in range(len(groveindices)))
+sum(mixedpairs[groveindices[i]][1] for i in range(len(groveindices)))
 
 # Too high
 # 9872170457092
