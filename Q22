@@ -1,0 +1,139 @@
+import pandas as pd
+import numpy as np
+
+import re
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+board = lines.split('\n')
+board = board[:-3] #-2] #
+
+board = [list(s) for s in board]
+
+R = len(board)
+W = max(len(r) for r in board)
+
+grid = np.zeros((R, W))
+
+# Populate grid
+i = 0
+for row in board:
+    j = 0
+    for entry in row:
+        if entry == '#':
+            grid[i,j] = 5
+        elif entry == '.':
+            grid[i,j] = 1
+        j = j+1
+    i = i +1
+
+path = lines.split('\n')[-2] #-1] #
+
+def split_path(pathstring):
+    ret = []
+    letters = re.findall("[a-zA-Z]",pathstring)
+    numbers = re.split("[a-zA-Z]",pathstring)
+    firstchar = pathstring[0]
+    n1 = len(letters)
+    n2 = len(numbers)
+    m = min(n1, n2)
+    if firstchar.isdigit():
+        for i in range(m):
+            ret.append(numbers[i])
+            ret.append(letters[i])
+        if n2 > n1:
+            ret.append(numbers[-1])
+    else: # First character is a letter
+        for i in range(m):
+            ret.append(letters[i])
+            ret.append(numbers[i])
+        if n1 > n2:
+            ret.append(letters[-1])
+    return ret
+
+def process_step(pos, direction, step):
+    if step.isdigit():
+        return move(pos, direction, int(step))
+    else:
+        newdir = dirchanges[tuple([direction, step])]
+        return [pos, newdir]
+    
+def move(pos, direction, n):
+    thisj = pos[0]
+    thisi = pos[1]
+    if direction == 'R':
+        thiswidth = rowwidths[thisj]
+        if len(rowblocks[thisj]) != 0:
+            relrowblocks = [(k - 1  - thisi) % thiswidth for k in rowblocks[thisj]] # Distances to the blocks
+            disttomove = min(min(relrowblocks), n) # if n > rowwidth, will hit a block
+        else:
+            disttomove = n % thiswidth
+        thisstart = rowmins[thisj]
+        newpos = [thisj, thisstart + ((thisi + disttomove - thisstart) % thiswidth)]
+    elif direction == 'L':
+        thiswidth = rowwidths[thisj]
+        if len(rowblocks[thisj]) != 0:
+            relrowblocks = [(thisi - k - 1) % thiswidth for k in rowblocks[thisj]] # Distances to the blocks
+            disttomove = min(min(relrowblocks), n) # if n > rowwidth, will hit a block
+        else:
+            disttomove = n % thiswidth
+        thisstart = rowmins[thisj]
+        newpos = [thisj, thisstart + ((thisi - thisstart - disttomove) % thiswidth)]
+    elif direction == 'D':
+        thisheight = colheights[thisi]
+        if len(colblocks[thisi]) != 0:
+            relcolblocks = [(k - 1 - thisj) % thisheight for k in colblocks[thisi]] # Distances to the blocks
+            disttomove = min(min(relcolblocks), n) # if n > rowwidth, will hit a block
+        else:
+            disttomove = n % thisheight
+        thisstart = colmins[thisi]
+        newpos = [thisstart + ((thisj + disttomove) % thisheight), thisi]
+    elif direction == 'U':
+        thisheight = colheights[thisi]
+        if len(colblocks[thisi]) != 0:
+            relcolblocks = [(thisj - k - 1) % thisheight for k in colblocks[thisi]] # Distances to the blocks
+            disttomove = min(min(relcolblocks), n) # if n > rowwidth, will hit a block
+        else:
+            disttomove = n % thisheight
+        thisstart = colmins[thisi]
+        newpos = [thisstart + ((thisj - thisstart - disttomove) % thisheight), thisi]
+    return [newpos, direction]
+        
+steps = split_path(path)        
+        
+# Store min/max widths and heights and length of valid sections between these.
+rowmins = [min(i for i in range(W) if grid[j, i] != 0) for j in range(R)]
+rowmaxs = [max(i for i in range(W) if grid[j, i] != 0) for j in range(R)]
+colmins = [min(j for j in range(R) if grid[j, i] != 0) for i in range(W)]
+colmaxs = [max(j for j in range(R) if grid[j, i] != 0) for i in range(W)]
+rowwidths = [rowmaxs[j] - rowmins[j] + 1 for j in range(R)]
+colheights = [colmaxs[i] - colmins[i] + 1 for i in range(W)]
+
+# Store indices of blocks in each row so can calculate relative distances for each step.
+rowblocks = [[i for i in range(W) if grid[j, i] == 5] for j in range(R)]
+colblocks = [[j for j in range(R) if grid[j, i] == 5] for i in range(W)]
+
+# Store current direction of travel.
+dirchanges = {}
+dirs = ['U', 'D', 'L', 'R']
+turns = ['L', 'R']
+dirchangekeys = [(a, b) for a in dirs for b in turns]
+dirchanges = {('U','L'): 'L', ('U','R'): 'R', ('D','L'):'R', ('D','R'):'L', ('L','L'):'D', ('L','R'):'U', ('R','L'):'U', ('R','R'):'D'}
+
+currdir = 'R'
+highestrowmin = min(i for i in range(W) if grid[0, i] == 1)
+currpos = [0, highestrowmin]
+
+# Move to min + (min(rel blocks, moven) % (max-min)).
+for s in steps:
+    print(currpos)
+    currpos, currdir = process_step(currpos, currdir, s)
+    
+facingdict = {'R': 0, 'D': 1, 'L': 2, 'U': 3}
+    
+frow = currpos[0] + 1
+fcol = currpos[1] + 1
+        
+answer = 1000*frow + 4*fcol + facingdict[currdir]      
+answer
