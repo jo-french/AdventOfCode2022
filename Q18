@@ -43,4 +43,94 @@ sum(opensides)
 
 #3470
 
+# Part 2
+
+# External if connected to a cube with high coordinates (definitely outside the lava droplet)
+# Use Dijkstra to test
+
+# Target cube = (0, 0, 0)
+
+vertices = [tuple(v) for v in vertices]
+
+def getsurfacecubes(cube, vertices):
+    scubes = []
+    for i in [-1, 1]:
+        scubes.append((cube[0] + i, cube[1], cube[2]))
+        scubes.append((cube[0], cube[1] + i, cube[2]))
+        scubes.append((cube[0], cube[1], cube[2] + i))
+    #print(scubes)
+    scubes = [c for c in scubes if not c in vertices]
+    return scubes
+    
+#a = getsurfacecubes(vertices[0], vertices)
+surfacecubes = [getsurfacecubes(v, vertices) for v in vertices]
+surfacecubes = [cube for l in surfacecubes for cube in l ]
+
+L = max(v[i] for i in range(3) for v in vertices) + 3
+
+def create_grid(L, vertices):
+    tempgrid = np.zeros((L, L, L))
+    for v in vertices:
+        tempgrid[v[0], v[1], v[2]] = 1
+    return tempgrid
+
+grid = create_grid(L, vertices)
+
+def labelnode(hgrid, dgrid, i, j, k, val, cdist, tovisit):
+    if hgrid[i, j, k] == 0:
+        newdist = cdist + 1
+        if dgrid[i, j, k] == -1: # or dgrid[i, j] > cdist + 1: # Won't occur
+            dgrid[i, j, k] = newdist
+            tovisit[(i,j,k)] = newdist
+    return dgrid, tovisit
+
+def Dijkstra(i, j, k, hgrid, dgrid, L, tovisit, visited): # (j, i)
+    #print(i, j, k)
+    #print(tovisit)
+    if i - 1 >= 0:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i-1, j, k, hgrid[i, j, k], dgrid[i, j, k], tovisit)
+    if i + 1 < L:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i+1, j, k, hgrid[i, j, k], dgrid[i, j, k], tovisit)
+    if j - 1 >= 0:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i, j-1, k, hgrid[i, j, k], dgrid[i, j, k], tovisit)
+    if j + 1 < L:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i, j+1, k, hgrid[i, j, k], dgrid[i, j, k], tovisit)
+    if k - 1 >= 0:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i, j, k -1, hgrid[i, j, k], dgrid[i, j, k], tovisit)
+    if k + 1 < L:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i, j, k + 1, hgrid[i, j, k], dgrid[i, j, k], tovisit)
+    tovisit.pop((i, j, k), 'None') # Remove current node from nodes to visit. Won't be added again as its distance is non-zero
+    visited.append((i,j,k))
+    if len(tovisit) != 0:
+        newnode = min(tovisit, key=tovisit.get)
+    else:
+        newnode = (i, j, k)
+    return newnode[0], newnode[1], newnode[2], dgrid, tovisit
+
+E = (0,0,0)
+
+distancestoE = []
+count = 0
+
+for start in surfacecubes:
+    print(count)
+    i = start[0]
+    j = start[1]
+    k = start[2]
+
+    distgrid = np.full((L, L, L), -1) # -1 codes infinity
+    distgrid[start[0], start[1], start[2]] = 0
+    tovisit = {(start[0], start[1], start[2]): 0}
+    visited = []
+
+    while distgrid[E[0], E[1], E[2]] == -1 and len(tovisit) != 0:
+        i, j, k, distgrid, tovisit = Dijkstra(i, j, k, grid, distgrid, L, tovisit, visited)
+
+    thisdist = distgrid[E[0], E[1], E[2]]
+    distancestoE.append([start, thisdist])
+    count = count + 1
+
+outercubes = [cube for cube in distancestoE if cube[1] != -1]
+
+# 1986
 
