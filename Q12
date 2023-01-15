@@ -1,0 +1,104 @@
+import pandas as pd
+import numpy as np
+
+with open('input.txt') as f:
+    lines = f.read()
+
+lines = lines.strip()   
+lines = lines.split('\n')
+lines = [list(l) for l in lines]  
+
+W = len(lines[0])
+H = len(lines)
+
+Epos = [(i,j)  for i in range(H) for j in range(W) if lines[i][j] == 'E'] # Check only one
+Epos = Epos[0]
+
+Spos = [(i,j)  for i in range(H) for j in range(W) if lines[i][j] == 'S'] # Check only one
+Spos = Spos[0]
+i = Spos[0]
+j = Spos[1]
+
+def create_grid(inlines, W, H):
+    heightgrid = np.zeros((H, W))
+    for j in range(W):
+        for i in range(H):
+            char = inlines[i][j]
+            if char != 'S' and char != 'E':
+                heightgrid[i, j] = ord(char) - 97
+    return heightgrid
+
+grid = create_grid(lines, W, H)
+grid[Epos[0]][Epos[1]] = 25
+
+distgrid = np.full((H, W), -1) # -1 codes infinity
+distgrid[Spos[0], Spos[1]] = 0
+
+def labelnode(hgrid, dgrid, i, j, val, cdist, tovisit):
+    if hgrid[i, j] <= val + 1:
+        newdist = cdist + 1
+        if dgrid[i, j] == -1: # or dgrid[i, j] > cdist + 1: # Won't occur
+            dgrid[i, j] = newdist
+            tovisit[(i,j)] = newdist
+    return dgrid, tovisit
+
+def Dijkstra(i, j, hgrid, dgrid, H, W, tovisit, visited): # (j, i)
+    print(i, j)
+    print(tovisit)
+    if i - 1 >= 0:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i-1, j, hgrid[i, j], dgrid[i, j], tovisit)
+    if i + 1 < H:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i+1, j, hgrid[i, j], dgrid[i, j], tovisit)
+    if j - 1 >= 0:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i, j-1, hgrid[i, j], dgrid[i, j], tovisit)
+    if j + 1 < W:
+        dgrid, tovisit = labelnode(hgrid, dgrid, i, j+1, hgrid[i, j], dgrid[i, j], tovisit)
+    tovisit.pop((i, j), 'None') # Remove current node from nodes to visit. Won't be added again as its distance is non-zero
+    visited.append((i,j))
+    if len(tovisit) != 0:
+        newnode = min(tovisit, key=tovisit.get)
+    else:
+        newnode = (i, j)
+    return newnode[0], newnode[1], dgrid, tovisit
+
+tovisit = {(Spos[0], Spos[1]): 0}
+visited = []
+
+while distgrid[Epos[0], Epos[1]] == -1 and len(tovisit) != 0:
+    i, j, distgrid, tovisit = Dijkstra(i, j, grid, distgrid, H, W, tovisit, visited)
+
+distgrid[Epos[0], Epos[1]]
+
+# 383
+
+# Part 2
+
+#Only need to calculate for squares that aren't 'S' as already know the answer for 'S'
+
+startsquares = [(i, j) for i in range(H) for j in range(W) if lines[i][j] == 'a']
+
+# Should put the code in functions but this is quicker
+
+grid = create_grid(lines, W, H)
+grid[Epos[0]][Epos[1]] = 25
+
+distancestoE = {}
+for start in startsquares:
+    thisdist = -1
+    i = start[0]
+    j = start[1]
+    distgrid = np.full((H, W), -1) # -1 codes infinity
+    distgrid[start[0], start[1]] = 0
+
+    tovisit = {start: 0}
+    visited = []
+    while distgrid[Epos[0], Epos[1]] == -1 and len(tovisit) != 0:
+        i, j, distgrid, tovisit = Dijkstra(i, j, grid, distgrid, H, W, tovisit, visited)
+    thisdist = distgrid[Epos[0], Epos[1]]
+    distancestoE[start] = thisdist
+
+validstarts = {k: v for k, v in distancestoE.items() if v > -1}
+
+min(validstarts.values())
+
+# 377
