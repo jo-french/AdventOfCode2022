@@ -1,0 +1,79 @@
+import pandas as pd
+import numpy as np
+
+#scipy.sparse.csgraph.shortest_path
+
+with open('input.txt') as f:
+    lines = f.read()
+    
+lines = lines.strip()
+lines = lines.split('\n')
+
+valves = [l.split(' has flow')[0].split('Valve ')[1] for l in lines]
+N = len(set(valves))
+# Unique valves
+
+flowrates = {}
+frlist = [int(l.split('rate=')[1].split(';')[0]) for l in lines]
+
+valve_map = {}
+v_i = 0
+for v in valves:
+    valve_map[v] = v_i
+    v_i += 1
+
+adjmatrix = np.zeros((N, N))
+
+adjvalves = [l.split('to valve ')[1].split(',') if 'leads' in l else l.split('to valves ')[1].split(',') for l in lines]
+adjvalves = [[av.strip() for av in avlist] for avlist in adjvalves]
+
+for i in range(N):
+    for v in adjvalves[i]:
+        adjmatrix[i, valve_map[v]] = 1
+        
+        
+from scipy.sparse.csgraph import shortest_path
+
+distmatrix = shortest_path(adjmatrix, 'auto', False)
+
+# Include only vertices with non-zero flows plus AA.
+inclv = [i for i in range(N) if valves[i] == 'AA' or frlist[i] != 0]
+
+subdistmatrix = distmatrix[np.ix_(inclv, inclv)]
+subvalves = [valves[i] for i in range(N) if i in inclv]
+subfrlist = [frlist[i] for i in range(N) if i in inclv]
+
+n = len(subvalves)
+maxt = 30
+startidx = [vi for vi in range(n) if subvalves[vi] == 'AA'][0]
+# posval = [[pos, flow, time elapsed, visited nodes]]
+posvals = [[startidx, 0, 0, {startidx}]]
+tmin = 0
+
+while tmin < maxt:
+    print(tmin)
+    newposvals = []
+    for pos in posvals:
+        thisidx = pos[0]
+        unvisited = [j for j in range(n) if j not in pos[3]]
+        addprevpos = True
+        for j_v in unvisited:
+            ttaken = pos[2] + subdistmatrix[thisidx, j_v] + 1
+            if ttaken <= maxt:
+                tleft = maxt - ttaken
+                visited = [k for k in range(n) if k in pos[3]]
+                visited.append(j_v)
+                newposvals.append([j_v, pos[1] + tleft * subfrlist[j_v], ttaken, set(visited)])
+                addprevpos = False
+        if addprevpos:
+            newposvals.append([j_v, pos[1], maxt, set(visited)])
+    if len(newposvals) == 0:
+        break
+    posvals = newposvals
+    tmin = min(p[2] for p in newposvals)
+
+int(max(p[1] for p in posvals))
+
+# test data: 1651
+
+# 1871
