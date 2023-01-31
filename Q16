@@ -66,7 +66,7 @@ while tmin < maxt:
                 newposvals.append([j_v, pos[1] + tleft * subfrlist[j_v], ttaken, set(visited)])
                 addprevpos = False
         if addprevpos:
-            newposvals.append([j_v, pos[1], maxt, set(visited)])
+            newposvals.append([pos[0], pos[1], maxt, pos[3]])
     if len(newposvals) == 0:
         break
     posvals = newposvals
@@ -77,3 +77,74 @@ int(max(p[1] for p in posvals))
 # test data: 1651
 
 # 1871
+
+#int(max(p[1] for p in newposvals))
+    
+# Part 2
+
+# Find the set of valves and flows in 26 minutes. Then maximise sums of flows over disjoint subsets.
+# Need to include all smaller subsets. Optimal to split the workload to open valves faster.
+
+maxt = 26
+
+startidx = [vi for vi in range(n) if subvalves[vi] == 'AA'][0]
+# posval = [[pos, flow, time elapsed, visited nodes]]
+posvals = [[startidx, 0, 0, {startidx}]]
+tmin = 0
+
+    
+oldvalves = []    
+while tmin < maxt:
+    print(tmin)
+    newposvals = []
+    for pos in posvals:
+        thisidx = pos[0]
+        unvisited = [j for j in range(n) if j not in pos[3]]
+        addprevpos = True
+        for j_v in unvisited:
+            ttaken = pos[2] + subdistmatrix[thisidx, j_v] + 1
+            if ttaken <= maxt:
+                tleft = maxt - ttaken
+                visited = [k for k in range(n) if k in pos[3]]
+                visited.append(j_v)
+                newposvals.append([j_v, pos[1] + tleft * subfrlist[j_v], ttaken, set(visited)])
+                addprevpos = False
+                oldvalves.append([pos[0], pos[1], maxt, pos[3]])
+        if addprevpos:
+            newposvals.append([pos[0], pos[1], maxt, pos[3]]) # Correct first coord and visited
+    if len(newposvals) == 0:
+        break
+    posvals = newposvals
+    tmin = min(p[2] for p in newposvals)
+
+newlist = [(p[1],p[3]) for p in posvals]
+newlist.extend([(q[1],q[3]) for q in oldvalves])
+maxflows = []
+valvelists = list(set(tuple(p[3]) for p in posvals).union(set(tuple(q[3]) for q in oldvalves)))
+count = 0
+for vlist in valvelists:
+    maxflows.append([int(max(p[0] for p in newlist if set(vlist) == p[1])), set(vlist).difference({startidx})])
+    print(count)
+    count += 1
+
+maxtotals = []
+NPV = len(maxflows)
+for i in range(NPV):
+    print(i)
+    nlist = []
+    p = maxflows[i]
+    v = p[0]
+    visited = p[1]
+    for j in range(i+1, NPV):
+        q = maxflows[j]
+        if visited.isdisjoint(q[1]):
+            nlist.append(int(v+q[0]))
+    if len(nlist) > 0:
+        maxtotals.append(max(nlist))
+        
+max(maxtotals)
+
+# inputtest
+# 1707
+
+# 2416
